@@ -8,17 +8,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://u794777727_BlackBrother
 app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+# Criação do db sem associar diretamente ao app
+db = SQLAlchemy()
+
+# Inicialização do db com o app
+db.init_app(app)
 
 class MyModelSchema(Schema):
     id = fields.Int()
     name = fields.Str()
 
+# Importação de modelos
 from models import *  
 
+# Inicialização do banco de dados dentro do contexto do app
 with app.app_context():
     db.create_all()
 
+# Importação das rotas
 from routes import *
 
 if __name__ == '__main__':
