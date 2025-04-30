@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from marshmallow import Schema, fields  # alterado para marshmallow direto
+from flask_marshmallow import Marshmallow  
 
 # Inicializa o Flask
 app = Flask(__name__)
