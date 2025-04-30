@@ -1,4 +1,4 @@
- from flask import Flask
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import Schema, fields  # alterado para marshmallow direto
 
