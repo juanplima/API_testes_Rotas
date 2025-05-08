@@ -76,10 +76,11 @@ class Telefone(db.Model):
 
 class Usuario(db.Model):
     __tablename__ = 'Usuario'  
-    ID_Usuario = db.Column(db.Integer, primary_key=True)
+    ID_Usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)  
     Login = db.Column(db.String(250), nullable=False)
     Senha = db.Column(db.String(250), nullable=False)
     FK_Pessoa_ID = db.Column(db.BigInteger, db.ForeignKey('Pessoa.CPF'), nullable=False)
+
 
 class Cargo(db.Model):
     __tablename__ = 'Cargo'  
