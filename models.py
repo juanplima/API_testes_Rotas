@@ -1,4 +1,5 @@
 from extensions import db
+from flask_bcrypt import generate_password_hash, check_password_hash
 
 # Base para todos os modelos com método to_dict
 class BaseModel(db.Model):
@@ -78,6 +79,12 @@ class Usuario(BaseModel):
     Senha = db.Column(db.String(250), nullable=False)
     FK_Pessoa_ID = db.Column(db.String(11), db.ForeignKey('Pessoa.CPF'), nullable=False)
 
+    def set_password(self, senha):
+        self.Senha = generate_password_hash(senha).decode('utf-8')
+
+    def check_password(self, senha):
+        return check_password_hash(self.Senha, senha)
+
 class Cargo(BaseModel):
     __tablename__ = 'Cargo'
     ID_Cargo = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -125,12 +132,15 @@ class Plano(BaseModel):
     __tablename__ = 'Plano'
     ID_Planos = db.Column(db.Integer, primary_key=True, autoincrement=True)
     FK_TipoPlano_ID = db.Column(db.Integer, db.ForeignKey('Tipo_Plano.ID_TipoPlanos'), nullable=False)
+    FK_Usuario_ID = db.Column(db.Integer, db.ForeignKey('Usuario.ID_Usuario'), nullable=False)
 
 class Aluno(BaseModel):
     __tablename__ = 'Aluno'
     Matricula = db.Column(db.Integer, primary_key=True, autoincrement=True)
     FK_Usuario_ID = db.Column(db.Integer, db.ForeignKey('Usuario.ID_Usuario'), nullable=False)
     FK_Planos_ID = db.Column(db.Integer, db.ForeignKey('Plano.ID_Planos'), nullable=False)
+    altura = db.Column(db.Numeric(4, 2), nullable=True)
+    peso = db.Column(db.Numeric(5, 2), nullable=True)
 
 class Menu_Principal(BaseModel):
     __tablename__ = 'Menu_Principal'
