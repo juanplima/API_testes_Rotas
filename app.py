@@ -1,6 +1,8 @@
 from flask import Flask
 from extensions import db 
 from routes import register_routes
+from flask_jwt_extended import JWTManager
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 
@@ -12,8 +14,12 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True
 }
 
+app.config['JWT_SECRET_KEY'] = "blackbrothers_top_2025_app_seguro_9x82!@#"
+
 # Inicializando o SQLAlchemy com a aplicação Flask
 db.init_app(app)
+jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
 
 # Registrando as rotas
 register_routes(app, db)
@@ -23,4 +29,3 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
