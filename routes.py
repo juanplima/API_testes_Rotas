@@ -14,7 +14,17 @@ def generic_crud(model):
     @routes.route(f"/{model_name}", methods=["GET"])
     @jwt_required()
     def get_all(model=model):
-        records = model.query.all()
+        query_params = request.args.to_dict()
+
+        if query_params:
+            query = model.query
+            for key, value in query_params.items():
+                column = getattr(model, key, None)
+                if column is not None:
+                    query = query.filter(column == value)
+            records = query.all()
+        else:
+            records = model.query.all()
         return jsonify([r.to_dict() for r in records])
     get_all.__name__ = f"get_all_{model_name}"
 
@@ -57,7 +67,7 @@ def generic_crud(model):
 
 @routes.route("/Usuario/login", methods=["POST"])
 def login_usuario():
-    print(">>> ENTROU NA ROTA DE LOGIN <<<")  # <-- log
+    print(">>> ENTROU NA ROTA DE LOGIN <<<")
     
     data = request.json
     login = data.get("login")
@@ -68,17 +78,22 @@ def login_usuario():
     if not login or not senha:
         return jsonify({"error": "Campos 'login' e 'senha' são obrigatórios"}), 400
 
+    # Verifica se usuário existe
     usuario = Usuario.query.filter_by(Login=login, Senha=senha).first()
-
-    if usuario:
-        # Criando um token para o usuário
-        access_token = create_access_token(identity=usuario.ID_Usuario)
-        return jsonify({
-            "usuario": usuario.to_dict(),
-            "token": access_token
-        }), 200
-    else:
+    if not usuario:
         return jsonify({"error": "Usuário não encontrado"}), 404
+
+    # Verifica se é aluno
+    aluno = Aluno.query.filter_by(FK_Usuario_ID=usuario.ID_Usuario).first()
+    if not aluno:
+        return jsonify({"error": "Usuário não é aluno"}), 403
+
+    # Cria token JWT
+    access_token = create_access_token(identity=str(usuario.ID_Usuario))
+    return jsonify({
+        "usuario": usuario.to_dict(),
+        "token": access_token
+    }), 200
 
 
 # Registra todas as rotas CRUD para os modelos
