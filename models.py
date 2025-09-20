@@ -1,4 +1,5 @@
 from extensions import db
+from datetime import datetime
 from flask_bcrypt import generate_password_hash, check_password_hash
 
 # Base para todos os modelos com método to_dict
@@ -108,13 +109,36 @@ class Dieta(BaseModel):
     Descricao_Refeicao = db.Column(db.Text, nullable=False)
     FK_Empregado_ID = db.Column(db.Integer, db.ForeignKey('Empregado.ID_Empregado'), nullable=False)
 
+class TreinoExercicio(BaseModel):
+    __tablename__ = 'treino_exercicio'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    FK_Treino_ID = db.Column(db.Integer, db.ForeignKey('Treino.ID_Treino'))
+    FK_Exercicio_ID = db.Column(db.Integer, db.ForeignKey('Exercicio.ID_Exercicio'))
+
+
 class Treino(BaseModel):
     __tablename__ = 'Treino'
     ID_Treino = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome = db.Column(db.String(1000), nullable=False)
-    Exercicio_Concluido = db.Column(db.Text, nullable=False)
-    Video = db.Column(db.String(2400))
+    Nome = db.Column(db.String(255), nullable=False)
     FK_Empregado_ID = db.Column(db.Integer, db.ForeignKey('Empregado.ID_Empregado'), nullable=False)
+
+
+    exercicios = db.relationship(
+        "Exercicio",
+        secondary="treino_exercicio",
+        back_populates="treinos"
+    )
+class Exercicio(BaseModel):
+    __tablename__ = 'Exercicio'
+    ID_Exercicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Nome = db.Column(db.String(255), nullable=False)
+
+    
+    treinos = db.relationship(
+        "Treino",
+        secondary="treino_exercicio",
+        back_populates="exercicios"
+    )
 
 class Tipo_Pagamento(BaseModel):
     __tablename__ = 'Tipo_Pagamento'
@@ -142,16 +166,6 @@ class Aluno(BaseModel):
     altura = db.Column(db.Numeric(4, 2), nullable=True)
     peso = db.Column(db.Numeric(5, 2), nullable=True)
 
-class Menu_Principal(BaseModel):
-    __tablename__ = 'Menu_Principal'
-    ID_Menu = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Informacoes = db.Column(db.String(2000), nullable=False)
-    Feedbacks = db.Column(db.String(2000))
-    Titulo_Video = db.Column(db.String(2000))
-    Videos = db.Column(db.String(2200))
-    FK_Aluno_ID = db.Column(db.Integer, db.ForeignKey('Aluno.Matricula'), nullable=False)
-    FK_Treino_ID = db.Column(db.Integer, db.ForeignKey('Treino.ID_Treino'), nullable=False)
-
 class Comunidade(BaseModel):
     __tablename__ = 'Comunidade'
     ID_Comunidade = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -164,9 +178,24 @@ class Tipo_Feedbacks(BaseModel):
     __tablename__ = 'Tipo_Feedbacks'
     ID_TipoFeedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Topico = db.Column(db.String(2000), nullable=False)
-    Descricao = db.Column(db.String(2200), nullable=False)
+
 
 class Feedbacks(BaseModel):
     __tablename__ = 'Feedbacks'
     ID_Feedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Mensagem = db.Column(db.String(2200), nullable=False) 
     FK_TipoFeedbacks_ID = db.Column(db.Integer, db.ForeignKey('Tipo_Feedbacks.ID_TipoFeedbacks'), nullable=False)
+
+class Videos(BaseModel):
+    __tablename__ = 'Videos'
+    ID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Titulo = db.Column(db.String(500), nullable=False)
+    URL = db.Column(db.String(2000), nullable=False)
+    ThumbNail = db.Column(db.String(2000))
+
+class Frequencia(BaseModel):
+    __tablename__ = 'frequencia'
+    ID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Nome_Frequencia = db.Column(db.String(255), nullable=False)
+    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    FK_Aluno_ID = db.Column(db.Integer, db.ForeignKey('Aluno.Matricula'), nullable=False)
