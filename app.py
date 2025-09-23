@@ -1,10 +1,15 @@
 from flask import Flask
+from flask_cors import CORS
 from extensions import db 
 from routes import register_routes
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 # Configurações do seu banco de dados
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://u794777727_BlackBrothers1:senhanovaBD157@193.203.175.99/u794777727_BlackBrotherBD'

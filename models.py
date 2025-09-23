@@ -179,7 +179,6 @@ class Tipo_Feedbacks(BaseModel):
     ID_TipoFeedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Topico = db.Column(db.String(2000), nullable=False)
 
-
 class Feedbacks(BaseModel):
     __tablename__ = 'Feedbacks'
     ID_Feedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)

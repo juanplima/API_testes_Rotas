@@ -2,8 +2,15 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models import *
 from flask_jwt_extended import create_access_token, jwt_required
+import os
 
 routes = Blueprint('routes', __name__)
+
+def get_secret():
+    secret = os.getenv("REGISTRATION_SECRET")
+    if not secret:
+        raise RuntimeError("REGISTRATION_SECRET não definido! Verifique o .env")
+    return secret
 
 def register_routes(app, db):
     app.register_blueprint(routes)
@@ -96,12 +103,111 @@ def login_usuario():
     }), 200
 
 
+# ================================ CADASTROS INICIAIS ==========================================
+
+@routes.route("/Usuario/register", methods=["POST"])
+def register_usuario():
+    client_code = request.headers.get("X-Registration-Secret")
+    if client_code != get_secret():
+        return jsonify({"error": "Unauthorized"}), 401
+ 
+    data = request.json
+    novo_usuario = Usuario(**data)
+    db.session.add(novo_usuario)
+    db.session.commit()
+
+    return jsonify(novo_usuario.to_dict()), 201
+
+@routes.route("/Telefone/register", methods=["POST"])
+def register_telefone():
+    client_code = request.headers.get("X-Registration-Secret")
+    if client_code != get_secret():
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    novo_telefone = Telefone(**data)
+    db.session.add(novo_telefone)
+    db.session.commit()
+    return jsonify(novo_telefone.to_dict()), 201
+
+@routes.route("/Plano/register", methods=["POST"])
+def register_plano():
+    client_code = request.headers.get("X-Registration-Secret")
+    if client_code != get_secret():
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    novo_plano = Plano(**data)
+    db.session.add(novo_plano)
+    db.session.commit()
+    return jsonify(novo_plano.to_dict()), 201
+
+@routes.route("/Pessoa/register", methods=["POST"])
+def register_pessoa():
+    client_code = request.headers.get("X-Registration-Secret")
+    if client_code != get_secret():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    nova_pessoa = Pessoa(**data)
+    db.session.add(nova_pessoa)
+    db.session.commit()
+    return jsonify(nova_pessoa.to_dict()), 201
+
+
+
+# =============================== ADMIN ROUTES ==========================================
+@routes.route("/alunos/detalhes", methods=["GET"])
+@jwt_required()
+def get_alunos_com_detalhes():
+    resultados = db.session.query(
+        Aluno, Pessoa, Tipo_Plano
+    ).join(
+        Usuario, Aluno.FK_Usuario_ID == Usuario.ID_Usuario
+    ).join(
+        Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF
+    ).join(
+        Plano, Aluno.FK_Planos_ID == Plano.ID_Planos
+    ).join(
+        Tipo_Plano, Plano.FK_TipoPlano_ID == Tipo_Plano.ID_TipoPlanos
+    ).all()
+    lista_de_alunos = []
+    for aluno, pessoa, tipo_plano in resultados:
+        aluno_data = aluno.to_dict()
+        aluno_data['Nome'] = pessoa.Nome 
+        aluno_data['Email'] = pessoa.Email
+        aluno_data['CPF'] = pessoa.CPF
+        aluno_data['Nome_Plano'] = tipo_plano.Nome
+        aluno_data['Preco_Plano'] = float(tipo_plano.Preco)
+        lista_de_alunos.append(aluno_data)
+    return jsonify(lista_de_alunos)
+
+@routes.route("/usuarios/detalhes", methods=["GET"])
+@jwt_required()
+def get_usuarios_com_detalhes():
+    resultados = db.session.query(
+        Usuario, 
+        Pessoa
+    ).join(
+        Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF
+    ).all()
+
+    lista_de_usuarios = []
+    for usuario, pessoa in resultados:
+        usuario_data = usuario.to_dict()
+        usuario_data['Nome'] = pessoa.Nome
+        usuario_data['Email'] = pessoa.Email
+        usuario_data['CPF'] = pessoa.CPF
+        lista_de_usuarios.append(usuario_data)
+    return jsonify(lista_de_usuarios)
+
+
 # Registra todas as rotas CRUD para os modelos
 models_list = [
     Estado, Cidade, Bairro, CEP, Tipo_Endereco, Endereco, Academia,
     Tipo_Telefone, Pessoa, Telefone, Usuario, Cargo, Empregado, Dieta,
-    Treino, Tipo_Pagamento, Plano, Tipo_Plano, Aluno, Menu_Principal,
-    Comunidade, Feedbacks, Tipo_Feedbacks
+    Treino, Exercicio, TreinoExercicio, Tipo_Pagamento, Plano, Tipo_Plano, Aluno,
+    Comunidade, Feedbacks, Tipo_Feedbacks, Frequencia, Videos
 ]
 
 for m in models_list:
