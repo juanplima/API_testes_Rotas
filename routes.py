@@ -21,55 +21,80 @@ def generic_crud(model):
     @routes.route(f"/{model_name}", methods=["GET"])
     @jwt_required()
     def get_all(model=model):
-        query_params = request.args.to_dict()
+        try:
+            query_params = request.args.to_dict()
 
-        if query_params:
-            query = model.query
-            for key, value in query_params.items():
-                column = getattr(model, key, None)
-                if column is not None:
-                    query = query.filter(column == value)
-            records = query.all()
-        else:
-            records = model.query.all()
-        return jsonify([r.to_dict() for r in records])
+            if query_params:
+                query = model.query
+                for key, value in query_params.items():
+                    column = getattr(model, key, None)
+                    if column is not None:
+                        query = query.filter(column == value)
+                records = query.all()
+            else:
+                records = model.query.all()
+            return jsonify([r.to_dict() for r in records])
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Erro interno: {e}")
+            return jsonify({"error": "Erro interno do servidor"}), 500
     get_all.__name__ = f"get_all_{model_name}"
 
     @routes.route(f"/{model_name}/<int:id>", methods=["GET"])
     @jwt_required()
     def get_one(id, model=model):
-        record = model.query.get_or_404(id)
-        return jsonify(record.to_dict())
+        try:
+            record = model.query.get_or_404(id)
+            return jsonify(record.to_dict())
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Erro interno: {e}")
+            return jsonify({"error": "Erro interno do servidor"}), 500
     get_one.__name__ = f"get_one_{model_name}"
 
     @routes.route(f"/{model_name}", methods=["POST"])
     @jwt_required()
     def create(model=model):
-        data = request.json
-        record = model(**data)
-        db.session.add(record)
-        db.session.commit()
-        return jsonify(record.to_dict()), 201
+        try:
+            data = request.json
+            record = model(**data)
+            db.session.add(record)
+            db.session.commit()
+            return jsonify(record.to_dict()), 201
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Erro interno: {e}")
+            return jsonify({"error": "Erro interno do servidor"}), 500
     create.__name__ = f"create_{model_name}"
 
     @routes.route(f"/{model_name}/<int:id>", methods=["PUT"])
     @jwt_required()
     def update(id, model=model):
-        data = request.json
-        record = model.query.get_or_404(id)
-        for key, value in data.items():
-            setattr(record, key, value)
-        db.session.commit()
-        return jsonify(record.to_dict())
+        try:
+            data = request.json
+            record = model.query.get_or_404(id)
+            for key, value in data.items():
+                setattr(record, key, value)
+            db.session.commit()
+            return jsonify(record.to_dict())
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Erro interno: {e}")
+            return jsonify({"error": "Erro interno do servidor"}), 500
     update.__name__ = f"update_{model_name}"
 
     @routes.route(f"/{model_name}/<int:id>", methods=["DELETE"])
     @jwt_required()
     def delete(id, model=model):
-        record = model.query.get_or_404(id)
-        db.session.delete(record)
-        db.session.commit()
-        return '', 204
+        try:
+            record = model.query.get_or_404(id)
+            db.session.delete(record)
+            db.session.commit()
+            return '', 204
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Erro interno: {e}")
+            return jsonify({"error": "Erro interno do servidor"}), 500
     delete.__name__ = f"delete_{model_name}"
 
 @routes.route("/Usuario/login", methods=["POST"])
@@ -134,7 +159,7 @@ def register_usuario():
     client_code = request.headers.get("X-Registration-Secret")
     if client_code != get_secret():
         return jsonify({"error": "Unauthorized"}), 401
- 
+
     data = request.json
     novo_usuario = Usuario(**data)
     db.session.add(novo_usuario)
@@ -177,7 +202,6 @@ def register_pessoa():
     db.session.add(nova_pessoa)
     db.session.commit()
     return jsonify(nova_pessoa.to_dict()), 201
-
 
 
 # =============================== ADMIN ROUTES ==========================================
