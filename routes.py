@@ -73,7 +73,7 @@ def generic_crud(model):
     delete.__name__ = f"delete_{model_name}"
 
 @routes.route("/Usuario/login", methods=["POST"])
-def login_usuario():
+def login_usuario():    
     print(">>> ENTROU NA ROTA DE LOGIN <<<")
     
     data = request.json
@@ -102,9 +102,33 @@ def login_usuario():
         "token": access_token
     }), 200
 
+@routes.route("/Admin/login", methods=["POST"])
+def login_admin():
+    print(">>> ENTROU NA ROTA DE LOGIN <<<")
+    
+    data = request.json
+    login = data.get("login")
+    senha = data.get("senha")
+
+    print(f"Login recebido: {login}, Senha recebida: {senha}")
+
+    if not login or not senha:
+        return jsonify({"error": "Campos 'login' e 'senha' são obrigatórios"}), 400
+
+    # Verifica se usuário existe
+    usuario = Usuario.query.filter_by(Login=login, Senha=senha).first()
+    if not usuario:
+        return jsonify({"error": "Usuário não encontrado"}), 404
+
+    # Cria token JWT
+    access_token = create_access_token(identity=str(usuario.ID_Usuario))
+    return jsonify({
+        "usuario": usuario.to_dict(),
+        "token": access_token
+    }), 200
+
 
 # ================================ CADASTROS INICIAIS ==========================================
-
 @routes.route("/Usuario/register", methods=["POST"])
 def register_usuario():
     client_code = request.headers.get("X-Registration-Secret")
@@ -200,6 +224,50 @@ def get_usuarios_com_detalhes():
         usuario_data['CPF'] = pessoa.CPF
         lista_de_usuarios.append(usuario_data)
     return jsonify(lista_de_usuarios)
+
+@routes.route("/treinos/detalhes", methods=["GET"])
+@jwt_required()
+def get_treinos_com_detalhes():
+    resultados = db.session.query(Treino, Pessoa).join(Empregado, Treino.FK_Empregado_ID == Empregado.ID_Empregado).join(Usuario, Empregado.FK_Usuario_ID == Usuario.ID_Usuario).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).all()
+    lista_de_treinos = []
+    for treino, pessoa in resultados:
+        treino_data = treino.to_dict()
+        treino_data['Nome_Instrutor'] = pessoa.Nome 
+        lista_de_treinos.append(treino_data)
+    return jsonify(lista_de_treinos)
+
+@routes.route("/empregados/detalhes", methods=["GET"])
+@jwt_required()
+def get_empregados_com_detalhes():
+    resultados = db.session.query(Empregado, Pessoa).join(Usuario, Empregado.FK_Usuario_ID == Usuario.ID_Usuario).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).all()
+    lista_de_empregados = []
+    for empregado, pessoa in resultados:
+        empregado_data = empregado.to_dict()
+        empregado_data['Nome'] = pessoa.Nome
+        lista_de_empregados.append(empregado_data)
+    return jsonify(lista_de_empregados)
+    
+@routes.route("/usuarios/nao-alunos", methods=["GET"])
+@jwt_required()
+def get_usuarios_nao_alunos():
+    try:
+        subquery = db.session.query(Aluno.FK_Usuario_ID).subquery()
+        resultados = db.session.query(Usuario, Pessoa).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).filter(Usuario.ID_Usuario.notin_(subquery)).all()
+        lista_de_usuarios = [{"ID_Usuario": usuario.ID_Usuario, "Nome": pessoa.Nome, "Email": pessoa.Email, "Login": usuario.Login} for usuario, pessoa in resultados]
+        return jsonify(lista_de_usuarios)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@routes.route("/usuarios/nao-funcionarios", methods=["GET"])
+@jwt_required()
+def get_usuarios_nao_funcionarios():
+    try:
+        subquery = db.session.query(Empregado.FK_Usuario_ID).subquery()
+        resultados = db.session.query(Usuario, Pessoa).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).filter(Usuario.ID_Usuario.notin_(subquery)).all()
+        lista_de_usuarios = [{"ID_Usuario": usuario.ID_Usuario, "Nome": pessoa.Nome, "Email": pessoa.Email, "Login": usuario.Login} for usuario, pessoa in resultados]
+        return jsonify(lista_de_usuarios)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # Registra todas as rotas CRUD para os modelos
