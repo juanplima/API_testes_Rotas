@@ -121,7 +121,7 @@ class Treino(BaseModel):
     ID_Treino = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Nome = db.Column(db.String(255), nullable=False)
     FK_Empregado_ID = db.Column(db.Integer, db.ForeignKey('Empregado.ID_Empregado'), nullable=False)
-
+    FK_Aluno_ID = db.Column(db.Integer, db.ForeignKey('Aluno.Matricula'), nullable=False)
 
     exercicios = db.relationship(
         "Exercicio",
