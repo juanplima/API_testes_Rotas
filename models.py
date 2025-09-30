@@ -115,7 +115,6 @@ class TreinoExercicio(BaseModel):
     FK_Treino_ID = db.Column(db.Integer, db.ForeignKey('Treino.ID_Treino'))
     FK_Exercicio_ID = db.Column(db.Integer, db.ForeignKey('Exercicio.ID_Exercicio'))
 
-
 class Treino(BaseModel):
     __tablename__ = 'Treino'
     ID_Treino = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -128,6 +127,7 @@ class Treino(BaseModel):
         secondary="treino_exercicio",
         back_populates="treinos"
     )
+
 class Exercicio(BaseModel):
     __tablename__ = 'Exercicio'
     ID_Exercicio = db.Column(db.Integer, primary_key=True, autoincrement=True)

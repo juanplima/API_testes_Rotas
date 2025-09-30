@@ -1,10 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, app, request, jsonify
 from extensions import db
 from models import *
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required
 import os
+import mercadopago
 
 routes = Blueprint('routes', __name__)
+
+def get_mp_sdk():
+    token = os.getenv("MP_ACCESS_TOKEN")
+    if not token:
+        raise ValueError("MP_ACCESS_TOKEN não definido!")
+    return mercadopago.SDK(token.strip())
 
 def get_secret():
     secret = os.getenv("REGISTRATION_SECRET")
@@ -292,7 +299,44 @@ def get_usuarios_nao_funcionarios():
         return jsonify(lista_de_usuarios)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# =============================== PAYMENT API ==========================================
+@routes.route("/create_preference", methods=["POST"])
+def create_preference():
+    sdk = get_mp_sdk()
+    data = request.json
+    # espera que data contenha, por exemplo:
+    #   items: lista de dicts com title, quantity, unit_price, etc
+    #   payer: opcional
+    try:
+        preference_data = {
+            "items": data.get("items", []),
+            "payer": data.get("payer", {}),
+            "back_urls": {
+                "success": data.get("back_urls", {}).get("success"),
+                "failure": data.get("back_urls", {}).get("failure"),
+                "pending": data.get("back_urls", {}).get("pending"),
+            },
+            "auto_return": "approved",
+            "payment_methods": {
+                # opcional: limitar ou excluir meios
+                # ex: "excluded_payment_methods": [{ "id": "visa" }],
+                # "excluded_payment_types": ...
+            },
+            "notification_url": data.get("notification_url")
+        }
+        preference_response = sdk.preference().create(preference_data)
+        # preference_response["response"] tem os dados
+        return jsonify(preference_response["response"]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@routes.route("/webhook", methods=["POST"])
+def webhook():
+    # receber notificações do Mercado Pago.
+    body = request.json
+    print("Webhook MP:", body)
+    return jsonify({"status": "received"}), 200
 
 # Registra todas as rotas CRUD para os modelos
 models_list = [

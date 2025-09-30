@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from extensions import db 
@@ -19,6 +20,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True
 }
 
+# Configuração do JWT.
 app.config['JWT_SECRET_KEY'] = "blackbrothers_top_2025_app_seguro_9x82!@#"
 
 # Inicializando o SQLAlchemy com a aplicação Flask
