@@ -130,8 +130,12 @@ class Treino(BaseModel):
 
 class Exercicio(BaseModel):
     __tablename__ = 'Exercicio'
+
     ID_Exercicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Nome = db.Column(db.String(255), nullable=False)
+    Descricao = db.Column(db.Text, nullable=True)
+    VideoURL = db.Column(db.String(500), nullable=True)
+    Thumbnail = db.Column(db.String(500), nullable=True)
 
     
     treinos = db.relationship(
@@ -182,8 +186,10 @@ class Tipo_Feedbacks(BaseModel):
 class Feedbacks(BaseModel):
     __tablename__ = 'Feedbacks'
     ID_Feedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Mensagem = db.Column(db.String(2200), nullable=False) 
+    Mensagem = db.Column(db.String(2200), nullable=False)
     FK_TipoFeedbacks_ID = db.Column(db.Integer, db.ForeignKey('Tipo_Feedbacks.ID_TipoFeedbacks'), nullable=False)
+    Avaliacao = db.Column(db.Integer, nullable=True)  
+    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 class Videos(BaseModel):
     __tablename__ = 'Videos'
@@ -194,7 +200,43 @@ class Videos(BaseModel):
 
 class Frequencia(BaseModel):
     __tablename__ = 'frequencia'
+
     ID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Nome_Frequencia = db.Column(db.String(255), nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     FK_Aluno_ID = db.Column(db.Integer, db.ForeignKey('Aluno.Matricula'), nullable=False)
+    Duracao = db.Column(db.Integer, nullable=True)
+    FK_TreinoExercicio_ID = db.Column(db.Integer, db.ForeignKey('treino_exercicio.id'), nullable=True)
+
+class Contas_a_Pagar(BaseModel):
+    __tablename__ = 'Contas_a_Pagar'
+
+    ID_ContaPagar = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Nome = db.Column(db.String(255), nullable=False)
+    Valor = db.Column(db.Numeric(10, 2), nullable=False)
+    DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    DataVencimento = db.Column(db.Date, nullable=False)
+    Status = db.Column(db.String(50), nullable=False, default='Pendente')
+
+class Contas_a_Receber(BaseModel):
+    __tablename__ = 'Contas_a_Receber'
+
+    ID_ContaReceber = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Nome = db.Column(db.String(255), nullable=False)
+    Valor = db.Column(db.Numeric(10, 2), nullable=False)
+    DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    DataVencimento = db.Column(db.Date, nullable=False)
+    Status = db.Column(db.String(50), nullable=False, default='Pendente')
+
+class CadastroEventos(BaseModel):
+    __tablename__ = 'Cadastro_Eventos'
+
+    ID_Evento = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    Nome = db.Column(db.String(255), nullable=False)
+    Tipo = db.Column(db.String(100), nullable=False)
+    DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    NotificationColor = db.Column(db.String(7), nullable=False)  # Ex: '#FF5733'
+    Descricao = db.Column(db.String(2000), nullable=True)
+    ImagemURL = db.Column(db.String(500), nullable=True)
+
+
