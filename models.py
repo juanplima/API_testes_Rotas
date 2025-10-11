@@ -208,25 +208,24 @@ class Frequencia(BaseModel):
     Duracao = db.Column(db.Integer, nullable=True)
     FK_TreinoExercicio_ID = db.Column(db.Integer, db.ForeignKey('treino_exercicio.id'), nullable=True)
 
-class Contas_a_Pagar(BaseModel):
-    __tablename__ = 'Contas_a_Pagar'
+class ContasAPagar(BaseModel):
+    __tablename__ = 'ContasAPagar'
 
     ID_ContaPagar = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Nome = db.Column(db.String(255), nullable=False)
-    Valor = db.Column(db.Numeric(10, 2), nullable=False)
+    Valor = db.Column(db.Float, nullable=False)
     DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    DataVencimento = db.Column(db.Date, nullable=False)
-    Status = db.Column(db.String(50), nullable=False, default='Pendente')
+    DataVencimento = db.Column(db.DateTime, nullable=False)
+    Status = db.Column(db.String(50), nullable=False)
 
-class Contas_a_Receber(BaseModel):
-    __tablename__ = 'Contas_a_Receber'
+class ContasAReceber(BaseModel):
+    __tablename__ = 'ContasAReceber'
 
     ID_ContaReceber = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome = db.Column(db.String(255), nullable=False)
-    Valor = db.Column(db.Numeric(10, 2), nullable=False)
-    DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    DataVencimento = db.Column(db.Date, nullable=False)
-    Status = db.Column(db.String(50), nullable=False, default='Pendente')
+    Origem = db.Column(db.String(255), nullable=False)
+    Valor = db.Column(db.Float, nullable=False)
+    Data = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    Status = db.Column(db.String(50), nullable=False)
 
 class CadastroEventos(BaseModel):
     __tablename__ = 'Cadastro_Eventos'
