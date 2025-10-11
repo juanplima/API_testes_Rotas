@@ -234,7 +234,7 @@ class CadastroEventos(BaseModel):
     Nome = db.Column(db.String(255), nullable=False)
     Tipo = db.Column(db.String(100), nullable=False)
     DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    NotificationColor = db.Column(db.String(7), nullable=False)  # Ex: '#FF5733'
+    NotificationColor = db.Column(db.String(7), nullable=False)  
     Descricao = db.Column(db.String(2000), nullable=True)
     ImagemURL = db.Column(db.String(500), nullable=True)
 
