@@ -227,13 +227,14 @@ class ContasAReceber(BaseModel):
     Data = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     Status = db.Column(db.String(50), nullable=False)
 
-class CadastroEventos(BaseModel):
+class Eventos(BaseModel):
     __tablename__ = 'Cadastro_Eventos'
 
     ID_Evento = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Nome = db.Column(db.String(255), nullable=False)
     Tipo = db.Column(db.String(100), nullable=False)
     DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    DataFinal = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     NotificationColor = db.Column(db.String(7), nullable=False)  
     Descricao = db.Column(db.String(2000), nullable=True)
     ImagemURL = db.Column(db.String(500), nullable=True)

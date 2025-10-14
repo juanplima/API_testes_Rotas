@@ -1,4 +1,4 @@
-from flask import Blueprint, app, request, jsonify
+from flask import Blueprint, app, current_app, request, jsonify, send_from_directory
 from extensions import db
 from models import *
 from flask_jwt_extended import create_access_token, jwt_required
@@ -6,6 +6,9 @@ import os
 import mercadopago
 
 routes = Blueprint('routes', __name__)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 def get_mp_sdk():
     token = os.getenv("MP_ACCESS_TOKEN")
@@ -338,12 +341,35 @@ def webhook():
     print("Webhook MP:", body)
     return jsonify({"status": "received"}), 200
 
+@routes.route('/Upload', methods=['POST'])
+def upload_file():
+    if 'imagem' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+
+    file = request.files['imagem']
+
+    if file and allowed_file(file.filename):
+        filename = file.filename
+        upload_folder = current_app.config['UPLOAD_FOLDER'] 
+        os.makedirs(upload_folder, exist_ok=True)
+        path = os.path.join(upload_folder, filename)
+        file.save(path)
+        image_url = f"/uploads/{filename}"
+        return jsonify({'ImagemURL': image_url}), 200
+
+    return jsonify({'error': 'Arquivo inválido'}), 400
+
+@routes.route('/uploads/<path:filename>')
+def get_uploaded_file(filename):
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    return send_from_directory(upload_folder, filename)
+
 # Registra todas as rotas CRUD para os modelos
 models_list = [
     Estado, Cidade, Bairro, CEP, Tipo_Endereco, Endereco, Academia,
     Tipo_Telefone, Pessoa, Telefone, Usuario, Cargo, Empregado, Dieta,
     Treino, Exercicio, TreinoExercicio, Tipo_Pagamento, Plano, Tipo_Plano, Aluno,
-    Comunidade, Feedbacks, Tipo_Feedbacks, Frequencia, Videos
+    Comunidade, Feedbacks, Tipo_Feedbacks, Frequencia, Videos, Eventos
 ]
 
 for m in models_list:

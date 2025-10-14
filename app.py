@@ -10,7 +10,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+ALLOWED_EXTENSIONS = os.getenv('ALLOWED_EXTENSIONS', 'png,jpg,jpeg,jfif')
+
+# Cria pasta se não existir
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 CORS(app)
+
+# Upload das imagens
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ALLOWED_EXTENSIONS'] = set(ALLOWED_EXTENSIONS.split(','))
 
 # Configurações do seu banco de dados
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://u794777727_BlackBrothers1:senhanovaBD157@193.203.175.99/u794777727_BlackBrotherBD'
