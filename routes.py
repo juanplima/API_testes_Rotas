@@ -256,6 +256,7 @@ def get_usuarios_com_detalhes():
         usuario_data['Nome'] = pessoa.Nome
         usuario_data['Email'] = pessoa.Email
         usuario_data['CPF'] = pessoa.CPF
+        usuario_data['Data_Nascimento'] = pessoa.DtNasc
         lista_de_usuarios.append(usuario_data)
     return jsonify(lista_de_usuarios)
 
