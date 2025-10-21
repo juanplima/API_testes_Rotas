@@ -136,7 +136,6 @@ class Exercicio(BaseModel):
     Descricao = db.Column(db.Text, nullable=True)
     VideoURL = db.Column(db.String(500), nullable=True)
     Thumbnail = db.Column(db.String(500), nullable=True)
-
     
     treinos = db.relationship(
         "Treino",
