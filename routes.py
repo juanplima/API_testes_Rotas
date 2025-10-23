@@ -201,6 +201,25 @@ def register_plano():
     db.session.commit()
     return jsonify(novo_plano.to_dict()), 201
 
+@routes.route("/Tipo_Plano/register", methods=["GET"])
+def get_all_Tipo_Plano_register():
+    try:
+        query_params = request.args.to_dict()
+        query = Tipo_Plano.query  # Sempre usando Tipo_Plano diretamente
+
+        # Aplica filtros se houver query params
+        for key, value in query_params.items():
+            column = getattr(Tipo_Plano, key, None)
+            if column is not None:
+                query = query.filter(column == value)
+
+        records = query.all()
+        return jsonify([r.to_dict() for r in records])
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Erro interno: {e}")
+        return jsonify({"error": "Erro interno do servidor"}), 500
+
 @routes.route("/Pessoa/register", methods=["POST"])
 def register_pessoa():
     client_code = request.headers.get("X-Registration-Secret")
