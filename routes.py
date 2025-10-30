@@ -108,7 +108,7 @@ def generic_crud(model):
     delete.__name__ = f"delete_{model_name}"
 
 @routes.route("/Usuario/login", methods=["POST"])
-def login_usuario():    
+def login_usuario():     
     print(">>> ENTROU NA ROTA DE LOGIN <<<")
     
     data = request.json
@@ -137,9 +137,9 @@ def login_usuario():
         "token": access_token
     }), 200
 
-@routes.route("/Admin/login", methods=["POST"])
+@routes.route("/Admin/login", methods=["POST"]) #rota para exibir o nome na tela inicial
 def login_admin():
-    print(">>> ENTROU NA ROTA DE LOGIN <<<")
+    print(">>> ENTROU NA ROTA DE LOGIN ADMIN <<<")
     
     data = request.json
     login = data.get("login")
@@ -153,14 +153,36 @@ def login_admin():
     # Verifica se usuário existe
     usuario = Usuario.query.filter_by(Login=login, Senha=senha).first()
     if not usuario:
-        return jsonify({"error": "Usuário não encontrado"}), 404
+        return jsonify({"error": "Usuário ou senha inválidos"}), 404
 
-    # Cria token JWT
+    # --- AJUSTE APLICADO AQUI ---
+    # 1. Buscar a Pessoa associada para pegar o nome
+    pessoa = Pessoa.query.filter_by(CPF=usuario.FK_Pessoa_ID).first()
+    
+    # 2. Verificar se a pessoa foi encontrada
+    if not pessoa:
+        # Se não encontrar a pessoa, ainda assim permite o login,
+        # mas envia o Login como nome reserva.
+        nome_usuario = usuario.Login 
+        email_usuario = "Não informado"
+    else:
+        nome_usuario = pessoa.Nome
+        email_usuario = pessoa.Email
+
+    # 3. Cria token JWT
     access_token = create_access_token(identity=str(usuario.ID_Usuario))
+    
+    # 4. Retornar os dados completos
     return jsonify({
-        "usuario": usuario.to_dict(),
+        "usuario": {
+            "ID_Usuario": usuario.ID_Usuario,
+            "Login": usuario.Login,
+            "Nome": nome_usuario,
+            "Email": email_usuario
+        },
         "token": access_token
     }), 200
+    
 
 
 # ================================ CADASTROS INICIAIS ==========================================
@@ -237,6 +259,7 @@ def register_pessoa():
 @routes.route("/alunos/detalhes", methods=["GET"])
 @jwt_required()
 def get_alunos_com_detalhes():
+    # ... (código existente)
     resultados = db.session.query(
         Aluno, Pessoa, Tipo_Plano
     ).join(
@@ -262,13 +285,13 @@ def get_alunos_com_detalhes():
 @routes.route("/usuarios/detalhes", methods=["GET"])
 @jwt_required()
 def get_usuarios_com_detalhes():
+    # ... (código existente)
     resultados = db.session.query(
         Usuario, 
         Pessoa
     ).join(
         Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF
     ).all()
-
     lista_de_usuarios = []
     for usuario, pessoa in resultados:
         usuario_data = usuario.to_dict()
@@ -282,6 +305,7 @@ def get_usuarios_com_detalhes():
 @routes.route("/treinos/detalhes", methods=["GET"])
 @jwt_required()
 def get_treinos_com_detalhes():
+    # ... (código existente)
     resultados = db.session.query(Treino, Pessoa).join(Empregado, Treino.FK_Empregado_ID == Empregado.ID_Empregado).join(Usuario, Empregado.FK_Usuario_ID == Usuario.ID_Usuario).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).all()
     lista_de_treinos = []
     for treino, pessoa in resultados:
@@ -293,6 +317,7 @@ def get_treinos_com_detalhes():
 @routes.route("/empregados/detalhes", methods=["GET"])
 @jwt_required()
 def get_empregados_com_detalhes():
+    # ... (código existente)
     resultados = db.session.query(Empregado, Pessoa).join(Usuario, Empregado.FK_Usuario_ID == Usuario.ID_Usuario).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).all()
     lista_de_empregados = []
     for empregado, pessoa in resultados:
@@ -304,6 +329,7 @@ def get_empregados_com_detalhes():
 @routes.route("/usuarios/nao-alunos", methods=["GET"])
 @jwt_required()
 def get_usuarios_nao_alunos():
+    # ... (código existente)
     try:
         subquery = db.session.query(Aluno.FK_Usuario_ID).subquery()
         resultados = db.session.query(Usuario, Pessoa).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).filter(Usuario.ID_Usuario.notin_(subquery)).all()
@@ -315,6 +341,7 @@ def get_usuarios_nao_alunos():
 @routes.route("/usuarios/nao-funcionarios", methods=["GET"])
 @jwt_required()
 def get_usuarios_nao_funcionarios():
+    # ... (código existente)
     try:
         subquery = db.session.query(Empregado.FK_Usuario_ID).subquery()
         resultados = db.session.query(Usuario, Pessoa).join(Pessoa, Usuario.FK_Pessoa_ID == Pessoa.CPF).filter(Usuario.ID_Usuario.notin_(subquery)).all()
@@ -322,15 +349,13 @@ def get_usuarios_nao_funcionarios():
         return jsonify(lista_de_usuarios)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 # =============================== PAYMENT API ==========================================
 @routes.route("/create_preference", methods=["POST"])
 def create_preference():
+    # ... (código existente)
     sdk = get_mp_sdk()
     data = request.json
-    # espera que data contenha, por exemplo:
-    #   items: lista de dicts com title, quantity, unit_price, etc
-    #   payer: opcional
     try:
         preference_data = {
             "items": data.get("items", []),
@@ -341,33 +366,27 @@ def create_preference():
                 "pending": data.get("back_urls", {}).get("pending"),
             },
             "auto_return": "approved",
-            "payment_methods": {
-                # opcional: limitar ou excluir meios
-                # ex: "excluded_payment_methods": [{ "id": "visa" }],
-                # "excluded_payment_types": ...
-            },
+            "payment_methods": {},
             "notification_url": data.get("notification_url")
         }
         preference_response = sdk.preference().create(preference_data)
-        # preference_response["response"] tem os dados
         return jsonify(preference_response["response"]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @routes.route("/webhook", methods=["POST"])
 def webhook():
-    # receber notificações do Mercado Pago.
+    # ... (código existente)
     body = request.json
     print("Webhook MP:", body)
     return jsonify({"status": "received"}), 200
 
 @routes.route('/Upload', methods=['POST'])
 def upload_file():
+    # ... (código existente)
     if 'imagem' not in request.files:
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
-
     file = request.files['imagem']
-
     if file and allowed_file(file.filename):
         filename = file.filename
         upload_folder = current_app.config['UPLOAD_FOLDER'] 
@@ -376,11 +395,11 @@ def upload_file():
         file.save(path)
         image_url = f"/uploads/{filename}"
         return jsonify({'ImagemURL': image_url}), 200
-
     return jsonify({'error': 'Arquivo inválido'}), 400
 
 @routes.route('/uploads/<path:filename>')
 def get_uploaded_file(filename):
+    # ... (código existente)
     upload_folder = current_app.config['UPLOAD_FOLDER']
     return send_from_directory(upload_folder, filename)
 
