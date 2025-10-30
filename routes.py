@@ -2,6 +2,7 @@ from flask import Blueprint, app, current_app, request, jsonify, send_from_direc
 from extensions import db
 from models import *
 from flask_jwt_extended import create_access_token, jwt_required
+from sqlalchemy.exc import IntegrityError
 import os
 import mercadopago
 
@@ -67,6 +68,13 @@ def generic_crud(model):
     def create(model=model):
         try:
             data = request.json
+
+            if isinstance(data, list):
+                records = [TreinoExercicio(**item) for item in data]
+                db.session.add_all(records)
+                db.session.commit()
+                return jsonify([r.to_dict() for r in records]), 201
+        
             record = model(**data)
             db.session.add(record)
             db.session.commit()
@@ -101,10 +109,27 @@ def generic_crud(model):
             db.session.delete(record)
             db.session.commit()
             return '', 204
+
+        except IntegrityError as e:
+            db.session.rollback()
+
+            if "foreign key constraint fails" in str(e).lower():
+                print(f"[AVISO] Não foi possível deletar {model_name} {id}: registro referenciado em outra tabela.")
+                return jsonify({
+                    "error": "Nao e possivel excluir este registro, pois ele esta sendo utilizado em outro local."
+                }), 400
+            
+            # Outro erro de integridade (não relacionado a FK)
+            print(f"[AVISO] Erro de integridade ao deletar {model_name} {id}: {e}")
+            return jsonify({
+                "error": "Erro de integridade nos dados."
+            }), 400
+
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Erro interno: {e}")
+            print(f"[ERRO] Erro interno ao deletar {model_name} {id}: {e}")
             return jsonify({"error": "Erro interno do servidor"}), 500
+
     delete.__name__ = f"delete_{model_name}"
 
 @routes.route("/Usuario/login", methods=["POST"])
@@ -137,7 +162,7 @@ def login_usuario():
         "token": access_token
     }), 200
 
-@routes.route("/Admin/login", methods=["POST"]) #rota para exibir o nome na tela inicial
+@routes.route("/Admin/login", methods=["POST"])
 def login_admin():
     print(">>> ENTROU NA ROTA DE LOGIN ADMIN <<<")
     
@@ -150,29 +175,21 @@ def login_admin():
     if not login or not senha:
         return jsonify({"error": "Campos 'login' e 'senha' são obrigatórios"}), 400
 
-    # Verifica se usuário existe
     usuario = Usuario.query.filter_by(Login=login, Senha=senha).first()
     if not usuario:
         return jsonify({"error": "Usuário ou senha inválidos"}), 404
 
-    # --- AJUSTE APLICADO AQUI ---
-    # 1. Buscar a Pessoa associada para pegar o nome
     pessoa = Pessoa.query.filter_by(CPF=usuario.FK_Pessoa_ID).first()
     
-    # 2. Verificar se a pessoa foi encontrada
     if not pessoa:
-        # Se não encontrar a pessoa, ainda assim permite o login,
-        # mas envia o Login como nome reserva.
         nome_usuario = usuario.Login 
         email_usuario = "Não informado"
     else:
         nome_usuario = pessoa.Nome
         email_usuario = pessoa.Email
 
-    # 3. Cria token JWT
     access_token = create_access_token(identity=str(usuario.ID_Usuario))
     
-    # 4. Retornar os dados completos
     return jsonify({
         "usuario": {
             "ID_Usuario": usuario.ID_Usuario,
