@@ -216,6 +216,8 @@ class ContasAPagar(BaseModel):
     DataCriacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     DataVencimento = db.Column(db.DateTime, nullable=False)
     Status = db.Column(db.String(50), nullable=False)
+    fk_categoria = db.Column(db.Integer, db.ForeignKey('Categoria.id'))
+    categoria = db.relationship('Categoria', back_populates='contas_a_pagar')
 
 class ContasAReceber(BaseModel):
     __tablename__ = 'ContasAReceber'
@@ -225,6 +227,8 @@ class ContasAReceber(BaseModel):
     Valor = db.Column(db.Float, nullable=False)
     Data = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     Status = db.Column(db.String(50), nullable=False)
+    fk_categoria = db.Column(db.Integer, db.ForeignKey('Categoria.id'))
+    categoria = db.relationship('Categoria', back_populates='contas_a_receber')
 
 class Eventos(BaseModel):
     __tablename__ = 'Cadastro_Eventos'
@@ -237,5 +241,14 @@ class Eventos(BaseModel):
     NotificationColor = db.Column(db.String(7), nullable=False)  
     Descricao = db.Column(db.String(2000), nullable=True)
     ImagemURL = db.Column(db.String(500), nullable=True)
+
+class Categoria(BaseModel):
+    __tablename__ = 'Categoria'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nome = db.Column(db.String(100), nullable=False)
+    contas_a_pagar = db.relationship('ContasAPagar', back_populates='categoria')
+    contas_a_receber = db.relationship('ContasAReceber', back_populates='categoria')
+
 
 
