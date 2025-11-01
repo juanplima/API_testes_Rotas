@@ -184,11 +184,15 @@ class Tipo_Feedbacks(BaseModel):
 
 class Feedbacks(BaseModel):
     __tablename__ = 'Feedbacks'
+
     ID_Feedbacks = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Mensagem = db.Column(db.String(2200), nullable=False)
     FK_TipoFeedbacks_ID = db.Column(db.Integer, db.ForeignKey('Tipo_Feedbacks.ID_TipoFeedbacks'), nullable=False)
-    Avaliacao = db.Column(db.Integer, nullable=True)  
+    FK_Aluno_ID = db.Column(db.Integer, db.ForeignKey('Aluno.Matricula'), nullable=True)  
+    Avaliacao = db.Column(db.Integer, nullable=True)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    aluno = db.relationship('Aluno', backref='feedbacks')
 
 class Videos(BaseModel):
     __tablename__ = 'Videos'
