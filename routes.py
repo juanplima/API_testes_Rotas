@@ -425,7 +425,7 @@ models_list = [
     Estado, Cidade, Bairro, CEP, Tipo_Endereco, Endereco, Academia,
     Tipo_Telefone, Pessoa, Telefone, Usuario, Cargo, Empregado, Dieta,
     Treino, Exercicio, TreinoExercicio, Tipo_Pagamento, Plano, Tipo_Plano, Aluno,
-    Comunidade, Feedbacks, Tipo_Feedbacks, Frequencia, Videos, Eventos, ContasAReceber, ContasAPagar
+    Comunidade, Feedbacks, Tipo_Feedbacks, Frequencia, Videos, Eventos, ContasAReceber, ContasAPagar, Categoria
 ]
 
 for m in models_list:
