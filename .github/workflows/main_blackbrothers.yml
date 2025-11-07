@@ -73,5 +73,7 @@ jobs:
         with:
           app-name: 'blackbrothers'
           slot-name: 'Production'
+          package: .
 
           
+
