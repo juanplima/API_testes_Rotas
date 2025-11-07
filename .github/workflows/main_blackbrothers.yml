@@ -63,9 +63,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0B47E116A2B54D028CC001D548B17D17 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_05E78AE451DA4ABBAE60A3DB99E79F06 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B5CFED9791794AEABEB3C94F53CA3814 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69A714E99482495DBB953E305BBB83E8 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_BB1A52D9F32142338293768BB21BCCFF }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F6B43B5AAC2744DABBC92728167453B8 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -73,7 +73,4 @@ jobs:
         with:
           app-name: 'blackbrothers'
           slot-name: 'Production'
-          package: .
-
           
-
