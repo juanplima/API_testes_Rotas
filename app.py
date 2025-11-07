@@ -41,8 +41,20 @@ bcrypt = Bcrypt(app)
 # Registrando as rotas
 register_routes(app, db)
 
+print("\n🔍 Rotas registradas:")
+for rule in app.url_map.iter_rules():
+    print(f"{rule.endpoint:30s} | {','.join(rule.methods):20s} | {rule.rule}")
+print("\n")
+
+@app.route('/')
+def index():
+    
+    return "🚀 API Black Brothers está rodando com sucesso!"
+
+    
 with app.app_context():
     db.create_all()
 
+# Inicia o servidor
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
